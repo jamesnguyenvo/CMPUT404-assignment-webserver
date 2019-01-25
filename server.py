@@ -84,13 +84,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 # check for / 
                 if data[1][-1] != "/":
                     status = "301 Moved Permanently\n"
-                    location = "Location: http://127.0.0.1:8080" + data[1] + "/" +'\n'
-                    print("Location: " + location)
+                    location = "Location: " + data[1] + "/" +'\n\n'
                     content = ""
                     content_type = ""
 
             response = protocol + status + location + content_type + content + "\n"
-            print(response) 
+            # print(response) 
             self.request.sendall(bytearray(response, "utf-8"))
 
 if __name__ == "__main__":
