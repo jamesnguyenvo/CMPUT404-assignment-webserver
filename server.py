@@ -1,7 +1,8 @@
 #  coding: utf-8 
 import socketserver
+import os.path
 
-# Copyright 2013 Abram Hindle, Eddie Antonio Santos
+# Copyright 2013 Abram Hindle, Eddie Antonio Santos, James Vo
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,11 +29,69 @@ import socketserver
 
 
 class MyWebServer(socketserver.BaseRequestHandler):
-    
+
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        # need string 
+        data = self.data.decode("utf-8").splitlines()[0].split(" ")
+        location = ""
+        if data[0] != "GET":
+            status = "405 Method Not Allowed\n\n"
+
+        else:
+            protocol = "HTTP/1.1 "
+            path = data[1]
+
+            if path[-1] == "/":
+                path += "index.html"
+            path = "www" + path
+                
+            # check for file
+            try:
+                verify_fileordir = os.path.abspath(data[1])
+                cwd = os.getcwd()
+                entire_path = cwd + "/www/" 
+                check = entire_path + verify_fileordir
+
+                pathway = open(path, "r")
+                with pathway as info:
+                    content = info.read()
+                    # check if the path is a dir
+                    if not os.path.isdir(check):
+                        # check if the path is a file
+                        if not os.path.isfile(check):  
+                            # print("not valid")                          
+                            status = "404 Page Not Found\n\n"
+                            content = ""
+                            content_type = "" 
+                        else:
+                            # print("it's valid")
+                            status = "200 OK\r\n"
+                    else:
+                        status = "200 OK\r\n"
+
+                # need the content type
+                extension = os.path.splitext(path)[1]
+                extension = extension[1:]
+                content_type = "Content-type: text/" + extension + "\n\n"
+
+            except:
+                # file is not available, 404
+                status = "404 Page Not Found\n\n"
+                content = ""
+                content_type = "" 
+
+                # check for / 
+                if data[1][-1] != "/":
+                    status = "301 Moved Permanently\n"
+                    location = "Location: http://127.0.0.1:8080" + data[1] + "/" +'\n'
+                    print("Location: " + location)
+                    content = ""
+                    content_type = ""
+
+            response = protocol + status + location + content_type + content + "\n"
+            print(response) 
+            self.request.sendall(bytearray(response, "utf-8"))
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
