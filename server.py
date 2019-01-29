@@ -34,12 +34,15 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.data = self.request.recv(1024).strip()
         # need string 
         data = self.data.decode("utf-8").splitlines()[0].split(" ")
+        protocol = "HTTP/1.1 "
         location = ""
+        content = ""
+        content_type = ""
         if data[0] != "GET":
             status = "405 Method Not Allowed\n\n"
 
         else:
-            protocol = "HTTP/1.1 "
+            # protocol = "HTTP/1.1 "
             path = data[1]
 
             if path[-1] == "/":
@@ -78,19 +81,19 @@ class MyWebServer(socketserver.BaseRequestHandler):
             except:
                 # file is not available, 404
                 status = "404 Page Not Found\n\n"
-                content = ""
-                content_type = "" 
+                # content = ""
+                # content_type = "" 
 
                 # check for / 
                 if data[1][-1] != "/":
                     status = "301 Moved Permanently\n"
                     location = "Location: " + data[1] + "/" +'\n\n'
-                    content = ""
-                    content_type = ""
+                    # content = ""
+                    # content_type = ""
 
-            response = protocol + status + location + content_type + content + "\n"
-            # print(response) 
-            self.request.sendall(bytearray(response, "utf-8"))
+        response = protocol + status + location + content_type + content + "\n"
+        # print(response) 
+        self.request.sendall(bytearray(response, "utf-8"))
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
